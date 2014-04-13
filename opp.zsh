@@ -77,6 +77,7 @@
 # Code
 
 bindkey -N opp
+bindkey -N '%F{red}> '
 
 typeset -A opps; opps=()
 opp_keybuffer=
@@ -99,7 +100,7 @@ def-oppc () {
   # see also opp-recursive-edit
   local keys="$1"
   local funcname="${2-opp+$1}"
-  bindkey -M opp "$keys" .accept-line
+  bindkey -M '%F{red}> ' "$keys" .accept-line
   opps+=("$keys" "$funcname")
 }
 
@@ -418,7 +419,7 @@ opp-recursive-edit-1 () {
   local mopp="${5}" # Mimic the OPerator or not.
 
   local numeric=$NUMERIC
-  zle recursive-edit -K opp && {
+  zle recursive-edit -K '%F{red}> ' && {
     ${opps[$KEYS]} opp-k $oppk
     zle $succ
   } || {
@@ -608,16 +609,22 @@ opp () {
   # all of the operator commands will be dispatched through this func.
   opp1
 }
+
+'%F{red}> ' () { opp }
+
 opp1 () { $opp_operators[$KEYS]; }
 
 opp-install () {
   {
     zle -N opp opp
+    zle -N '%F{red}> ' '%F{red}> '
     typeset -gA opp_operators; opp_operators=()
     BK () {
       opp_operators+=("$1" $2)
       bindkey -M vicmd "$1" opp
       { bindkey -M afu-vicmd "$1" opp } > /dev/null 2>&1
+      bindkey -M vicmd "$1" '%F{red}> '
+      { bindkey -M afu-vicmd "$1" '%F{red}> ' } > /dev/null 2>&1
     }
     BK "c" opp-vi-change
     BK "d" opp-vi-delete
